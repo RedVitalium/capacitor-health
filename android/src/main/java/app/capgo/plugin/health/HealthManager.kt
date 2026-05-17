@@ -893,7 +893,14 @@ class HealthManager {
         val totalDistance: Double?,
         val totalEnergyBurned: Double?
     )
-    
+    private fun mapRecordingMethodToString(method: Int): String {
+        return when (method) {
+            Metadata.RECORDING_METHOD_ACTIVELY_RECORDED -> "active"
+            Metadata.RECORDING_METHOD_AUTOMATICALLY_RECORDED -> "auto"
+            Metadata.RECORDING_METHOD_MANUAL_ENTRY -> "manual"
+            else -> "unknown"
+        }
+    }
     private fun createWorkoutPayload(session: ExerciseSessionRecord, aggregatedData: WorkoutAggregatedData): JSObject {
         val payload = JSObject()
         
@@ -931,11 +938,15 @@ class HealthManager {
             }
         }
         
-        payload.put("platformId", session.metadata.id)
+       payload.put("platformId", session.metadata.id)
+
+        // Recording method: how the workout entered Health Connect.
+        // Useful for distinguishing auto-detected workouts from user-initiated sessions
+        // and manual entries (e.g., for filtering false positives in research data).
+        payload.put("recordingMethod", mapRecordingMethodToString(session.metadata.recordingMethod))
 
         // Note: customMetadata is not available on Metadata in Health Connect
         // Metadata only contains dataOrigin, device, and lastModifiedTime
-
         return payload
     }
 
